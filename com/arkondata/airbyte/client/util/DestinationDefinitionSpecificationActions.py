@@ -19,7 +19,6 @@ class DestinationDefinitionSpecification:
             )
             api_response = self.destination_definition_specification_api.get_destination_definition_specification(
                 destination_definition_id_with_workspace_id)
-            print(api_response)
             return api_response
         except ApiException as e:
             print("Exception when calling DestinationDefinitionSpecificationApi->get_destination_definition_specification: %s\n" % e)

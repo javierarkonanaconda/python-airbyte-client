@@ -1,6 +1,7 @@
 from com.arkondata.airbyte.client import ApiException
 from com.arkondata.airbyte.client.api.source_api import SourceApi
 from com.arkondata.airbyte.client.model.source_create import SourceCreate
+from com.arkondata.airbyte.client.model.source_discover_schema_request_body import SourceDiscoverSchemaRequestBody
 from com.arkondata.airbyte.client.model.source_id_request_body import SourceIdRequestBody
 from com.arkondata.airbyte.client.model.workspace_id_request_body import WorkspaceIdRequestBody
 
@@ -64,3 +65,15 @@ class Source:
             return api_response
         except ApiException as e:
             print("Exception when calling SourceApi->list_sources_for_workspace: %s\n" % e)
+
+    def discover_schema_for_source(self, source_id):
+        try:
+            source_discover_schema_request_body = SourceDiscoverSchemaRequestBody(
+                source_id=source_id,
+                disable_cache=True,
+            )
+            api_response = self.source_api_instance.discover_schema_for_source(source_discover_schema_request_body)
+            return api_response
+        except ApiException as e:
+            print("Exception when calling SourceApi->discover_schema_for_source: %s\n" % e)
+

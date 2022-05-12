@@ -22,41 +22,41 @@ class Connection:
         else:
             raise Exception("error on destination_api_instance")
 
-    def create_connection(self):  ###pending , tambien los demas create
+    def create_connection(self, name, namespace_definition, namespace_format, source_id, destination_id, stream_source_name, stream_sync_mode, stream_namespace, stream_destination_sync_mode, stream_destination_alias_name, stream_source_defined_cursor, status, stream_destination_selected, json_schema, operation_ids: list = [], stream_source_default_cursor_field: list = [], stream_source_defined_primary_key: list = [], stream_destination_cursor_field: list = [], stream_destination_primary_key: list = []):  ###pending , tambien los demas create
         try:
             connection_create = ConnectionCreate(
-                name="name_example",
-                namespace_definition=NamespaceDefinitionType("source"),
-                namespace_format="public",###SOURCE_NAMESPACE -> db schema
-                source_id='d0134a9c-d895-43e9-bc61-cc1f2ac05289',
-                destination_id='760f0492-00b7-4e72-812a-8b0f5a77febb',
-                operation_ids=[],
+                name=name,
+                namespace_definition=NamespaceDefinitionType(namespace_definition), ###Destination Namespace* ->  ["source", "destination", "customformat", ]
+                namespace_format=namespace_format,###
+                source_id=source_id,
+                destination_id=destination_id,
+                operation_ids=operation_ids,
                 sync_catalog=AirbyteCatalog(
                     streams=[
                         AirbyteStreamAndConfiguration(
                             stream=AirbyteStream(
-                                name="prueba",
-                                json_schema={},
+                                name=stream_source_name,
+                                json_schema=json_schema,
                                 supported_sync_modes=[
-                                    SyncMode("full_refresh"),
+                                    SyncMode(stream_sync_mode),
                                 ],
-                                source_defined_cursor=False,
-                                default_cursor_field=[], ## Used in incremental sync mode only. It determines which records to sync.
-                                source_defined_primary_key=[],
-                                namespace="public",
+                                source_defined_cursor=stream_source_defined_cursor,
+                                default_cursor_field=stream_source_default_cursor_field, ## Used in incremental sync mode only. It determines which records to sync.
+                                source_defined_primary_key=stream_source_defined_primary_key,
+                                namespace=stream_namespace,
                             ),
                             config=AirbyteStreamConfiguration(
-                                sync_mode=SyncMode("full_refresh"),
-                                cursor_field=[],
-                                destination_sync_mode=DestinationSyncMode("append"),
-                                primary_key=[],
-                                alias_name="alias",
-                                selected=True,
+                                sync_mode=SyncMode(stream_sync_mode),
+                                cursor_field=stream_destination_cursor_field,
+                                destination_sync_mode=DestinationSyncMode(stream_destination_sync_mode),
+                                primary_key=stream_destination_primary_key,
+                                alias_name=stream_destination_alias_name,
+                                selected=stream_destination_selected,
                             ),
                         ),
                     ],
                 ),
-                status=ConnectionStatus("active"),
+                status=ConnectionStatus(status),
             )
             api_response = self.connection_api_instance.create_connection(connection_create)
             return api_response

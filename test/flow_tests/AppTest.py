@@ -4,7 +4,7 @@ import time
 import com.arkondata.airbyte.client
 from com.arkondata.airbyte.client.api import workspace_api, destination_api, source_definition_api, \
     source_definition_specification_api, source_api, destination_definition_specification_api, \
-    destination_definition_api, connection_api, jobs_api
+    destination_definition_api, connection_api, jobs_api, operation_api
 from com.arkondata.airbyte.client.api.destination_api import DestinationApi
 from com.arkondata.airbyte.client.model.workspace_id_request_body import WorkspaceIdRequestBody
 from com.arkondata.airbyte.client.model.workspace_read_list import WorkspaceReadList
@@ -17,6 +17,7 @@ from com.arkondata.airbyte.client.util.DestinationDefinitionActions import Desti
 from com.arkondata.airbyte.client.util.DestinationDefinitionSpecificationActions import \
     DestinationDefinitionSpecification
 from com.arkondata.airbyte.client.util.JobActions import Job
+from com.arkondata.airbyte.client.util.OperationActions import Operation
 from com.arkondata.airbyte.client.util.SourceActions import Source
 from com.arkondata.airbyte.client.util.SourceDefinitionActions import SourceDefinition
 from com.arkondata.airbyte.client.util.SourceDefinitionSpecificationActions import SourceDefinitionSpecification
@@ -24,7 +25,8 @@ from com.arkondata.airbyte.client.util.WorkspaceActions import Workspace
 
 workspace_name = '02bde510-f5b1-4aeb-b390-086b8d764e1d'  ###"javstest"
 source_ds = "postgres"
-destination_ds = "postgres"
+destination_ds = "snowflake"
+table_name = "prueba"
 
 # Defining the host is optional and defaults to http://localhost:8000/api
 # See configuration.py for a list of all supported configuration parameters.
@@ -40,6 +42,18 @@ def clean_json(obj):
     del json_obj["icon"]
     return json_obj
 
+
+def get_json_schema(obj):
+    if obj != None:
+        obj_dict = obj.__dict__
+        stream = obj_dict["_data_store"]["stream"]
+        res = {
+            "name":stream["name"],
+            "json_schema":stream["json_schema"]
+        }
+        return res
+    else:
+        return {}
 
 with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
@@ -82,9 +96,9 @@ with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
         source_api_instance = source_api.SourceApi(api_client)
         connection_configuration ={
             "database":"postgres",
-            "host":"35.196.111.83",
-            "username":"postgres",
-            "password":"bm9tZXZlYXM=",
+            "host":"",
+            "username":"",
+            "password":"=",
             "port":5432,
             "schemas":["public"]
         }
@@ -96,11 +110,15 @@ with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
 
 
         ########## check source connection
-        g_source_id = 'd0134a9c-d895-43e9-bc61-cc1f2ac05289'
-        print("check source connection")
+        g_source_id = create_source_res.__dict__["_data_store"]["source_id"]
+        print(f"source id ---> {g_source_id}")
+        print("check source connection wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
         check_source = source_inst.check_connection_to_source(g_source_id)
-        connection_status = check_source.__dict__["_data_store"].get("status", None)
-        print(connection_status)
+        if check_source != None:
+            connection_status = check_source.__dict__["_data_store"].get("status", None)
+            print(connection_status)
+        else:
+            raise Exception("error al checar el source")
 
 
         ################### destino
@@ -119,8 +137,6 @@ with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
             print(" destino no existe, se procede a crear ...")
 
 
-
-
         ## get destin defini spec
         destination_definition_specification_api_instance = destination_definition_specification_api.DestinationDefinitionSpecificationApi(api_client)
         destination_definition_specification_res = DestinationDefinitionSpecification(destination_definition_specification_api_instance).get_destination_definition_specification(destination_definition_id)
@@ -128,28 +144,31 @@ with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
 
         ttd =destination_definition_specification_res.__dict__
 
-        print(ttd["_data_store"]["connection_specification"]["properties"])
-
         destination_api_instance = destination_api.DestinationApi(api_client)
         destination = Destination(destination_api_instance)
 
         destination_configuration = {
-            "database": "postgres",
-            "host": "35.196.111.83",
-            "username": "postgres",
-            "password": "bm9tZXZlYXM=",
-            "port": 5432,
-            "schema": "public"
+            "host":"",
+            "role":"ACCOUNTADMIN",
+            "schema":"PUBLIC",
+            "database":"pg",
+            "username":"",
+            "warehouse":"COMPUTE_WH",
+            "credentials":{
+                'password': ""
+            }
+
         }
         print("create destino zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz")
         create_desti = destination.create_destination(workspace_id=workspace_id, name="outdest", destination_definition_id=destination_definition_id, connection_configuration=destination_configuration )
-        print(create_desti)
+        print(create_desti.__dict__)
         time.sleep(10)
 
-        g_destination_id = '760f0492-00b7-4e72-812a-8b0f5a77febb'
+        g_destination_id = create_desti.__dict__["_data_store"]["destination_id"]
+        print(f"dest id ---> {g_destination_id}")
         check_destination = destination.check_connection_to_destination(g_destination_id)
         destination_check_status = check_destination.__dict__["_data_store"]["status"]
-        print("destination_check_status")
+        print("destination_check_status wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
         print(destination_check_status)
 
         ### a las pruebas de connection agregarles recursividad de retry
@@ -172,11 +191,64 @@ with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
             print("existe")
             print(connection_id)
         else:
-            res_create = connection_inst.create_connection()
+
+            get_source_schemas = source_inst.discover_schema_for_source(g_source_id)
+            print("get_source_schemas XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print(get_source_schemas.__dict__)
+            print("ñññññññ")
+            stream_source_catalog = get_source_schemas.__dict__["_data_store"]["catalog"].__dict__["_data_store"]["streams"]
+
+            map1 = list( map( lambda x: get_json_schema(x) , stream_source_catalog) )
+            print("map1")
+            print(map1)
+            print(type(map1))
+            #33filter_by_table = list( map( lambda x: x.keys() , map1) )
+            filter_by_table = list( filter(lambda x: dict(x).get("name", "") == table_name, map1))
+            print(filter_by_table)
+
+            if len(filter_by_table) > 0:
+                get_json_schema = filter_by_table[0]["json_schema"]
+                print("get_json_schema ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp")
+                print(get_json_schema)
+                print(type(get_json_schema))
+
+            ### create basic operation
+            operation_api_instance = operation_api.OperationApi(api_client)
+            operation_inst = Operation(operation_api_instance)
+            res_create_op = operation_inst.create_operation(workspace_id,"Normalization","normalization","basic", False).__dict__
+            print("res_create_op <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+            print(res_create_op)
+            print(type(res_create_op))
+
+            get_operation_id = res_create_op["_data_store"]["operation_id"]
+            print("get_operation_id kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+            print(get_operation_id)
+
+            ### create connection
+            ## nota: el nombre de la tabla del destino debe ser el mismo que el del source, eso automaticamente lo mapea y asi es como lo maneja airbyte, lel nombre de las tablas es el mismo en ambos source y destino, tomando como base el source
+            name = "testconnection"
+            namespace_definition = "source"  ## Allowed: source┃destination┃customformat
+            namespace_format = '${SOURCE_NAMESPACE}'  ##"public" ## db schema connection sink ## Used when namespaceDefinition is 'customformat'. If blank then behaves like namespaceDefinition = 'destination'. If "${SOURCE_NAMESPACE}" then behaves like namespaceDefinition = 'source'.
+            source_id = g_source_id  ## source_id
+            destination_id = g_destination_id  ## destination_id
+            stream_name = table_name  ## is the raw table name from your source.
+            stream_sync_mode = "full_refresh"  ## existen varios tipos de sync
+            stream_namespace = "public"  ## db schema connection source
+            destination_sync_mode = "overwrite"  ## must be one of ['append', 'overwrite', 'append_dedup']
+            stream_alias_name = table_name
+            stream_source_defined_cursor = None  ## es true o false
+            status = "active"
+            stream_selected = True
+            json_schema = get_json_schema##{'properties': {'description': {'type': 'string'}, 'id': {'type': 'number'}},'type': 'object'}
+            operation_ids = [get_operation_id] ## basic normalization
+
+            res_create = connection_inst.create_connection( name, namespace_definition, namespace_format, source_id, destination_id, stream_name, stream_sync_mode, stream_namespace, destination_sync_mode, stream_alias_name, stream_source_defined_cursor, status, stream_selected, json_schema, operation_ids)
             print("create conn >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             print(res_create)
-            connection_id = 'b2188460-ce5e-4f7f-a201-9f61023719aa'
             print("creado")
+
+        connection_id = res_create.__dict__["_data_store"]["connection_id"]
+        print(f"connection_id -> {connection_id}")
 
         print("run_trigger<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         res_trigger = connection_inst.trigger_manual_sync(connection_id)
