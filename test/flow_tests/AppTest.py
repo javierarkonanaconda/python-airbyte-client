@@ -96,9 +96,9 @@ with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
         source_api_instance = source_api.SourceApi(api_client)
         connection_configuration ={
             "database":"postgres",
-            "host":"",
-            "username":"",
-            "password":"=",
+            "host":"35.196.111.83",
+            "username":"postgres",
+            "password":"bm9tZXZlYXM=",
             "port":5432,
             "schemas":["public"]
         }
@@ -148,14 +148,14 @@ with com.arkondata.airbyte.client.ApiClient(configuration) as api_client:
         destination = Destination(destination_api_instance)
 
         destination_configuration = {
-            "host":"",
+            "host":"ee52075.us-east-2.aws.snowflakecomputing.com",
             "role":"ACCOUNTADMIN",
             "schema":"PUBLIC",
             "database":"pg",
-            "username":"",
+            "username":"javierorta",
             "warehouse":"COMPUTE_WH",
             "credentials":{
-                'password': ""
+                'password': "**18DeMayoDe1995##"
             }
 
         }
